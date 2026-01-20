@@ -58,20 +58,29 @@ with st.sidebar:
     st.info(challenges[day_seed % len(challenges)])
     if st.button("I did it! ✨"): st.balloons()
 
+   # --- UPDATED MUSIC SECTION (Fixed Indentation) ---
+    st.divider()
     st.subheader("🎧 Emotion-Based Playlists")
-col1, col2 = st.columns(2)
+    m_col1, m_col2 = st.columns(2)
 
-with col1:
-    if st.button("📚 Focus / Study"):
-        st.session_state.current_track = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-    if st.button("😢 Feeling Sad"):
-        st.session_state.current_track = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3"
+    with m_col1:
+        if st.button("📚 Study"):
+            st.session_state.current_track = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+        if st.button("😢 Sad"):
+            st.session_state.current_track = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3"
 
-with col2:
-    if st.button("😊 Feeling Happy"):
-        st.session_state.current_track = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
-    if st.button("🌀 Overwhelmed"):
-        st.session_state.current_track = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
+    with m_col2:
+        if st.button("😊 Happy"):
+            st.session_state.current_track = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+        if st.button("🌀 Overwhelmed"):
+            st.session_state.current_track = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
+
+    # Display the player in the sidebar so it stays active across tabs
+    if st.session_state.current_track:
+        st.audio(st.session_state.current_track, format="audio/mp3")
+        if st.button("⏹️ Stop Music"):
+            st.session_state.current_track = None
+            st.rerun()
 
     # Safety
     st.sidebar.markdown("---")
