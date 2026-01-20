@@ -26,6 +26,9 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "chat_count" not in st.session_state:
     st.session_state.chat_count = 0
+if "current_track" not in st.session_state:
+    st.session_state.current_track = None
+
 
 # --- 2. THE GENERATIVE BRAIN (The "Real" Feeling) ---
 @st.cache_resource
