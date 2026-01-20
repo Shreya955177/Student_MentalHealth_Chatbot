@@ -9,6 +9,19 @@ import datetime
 # --- 1. PAGE CONFIG ---
 st.set_page_config(page_title="Lumina | AI Sanctuary", page_icon="🌱", layout="wide")
 
+# --- 2. GLOBAL CONTENT & STATE ---
+GUIDE_TEXT = """
+Welcome to your safe space. Lumina is designed to be a **reflective listener**.
+To have the best experience:
+
+* **Speak your heart:** Use your native language. Lumina understands over 100 languages.
+* **Be specific:** Instead of "I'm sad," try "I'm feeling overwhelmed by my math assignment."
+* **ask for help:** You can ask, "Can you help me reframe this thought?" or "I just need to vent."
+* **Take your time:** There is no rush. This space is yours.
+
+*Note: Lumina is an AI companion for wellness, not a clinical replacement.*
+"""
+
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "chat_count" not in st.session_state:
@@ -66,6 +79,10 @@ col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     if lottie_zen: st_lottie(lottie_zen, height=200)
     st.markdown('<div class="glass-card"><h1>Lumina</h1><p>Truly human, truly multilingual.</p></div>', unsafe_allow_html=True)
+
+ # --- THE USER GUIDE (Placed right after the header) ---
+with st.expander("💡 How to get the most out of Lumina", expanded=False):
+    st.markdown(GUIDE_TEXT)
 
 tab1, tab2, tab3 = st.tabs(["💬 Chat Support", "📝 Reflection", "🔬 Science"])
 
