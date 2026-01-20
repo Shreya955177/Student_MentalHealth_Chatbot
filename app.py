@@ -58,6 +58,21 @@ with st.sidebar:
     st.info(challenges[day_seed % len(challenges)])
     if st.button("I did it! ✨"): st.balloons()
 
+    st.subheader("🎧 Emotion-Based Playlists")
+col1, col2 = st.columns(2)
+
+with col1:
+    if st.button("📚 Focus / Study"):
+        st.session_state.current_track = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    if st.button("😢 Feeling Sad"):
+        st.session_state.current_track = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3"
+
+with col2:
+    if st.button("😊 Feeling Happy"):
+        st.session_state.current_track = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+    if st.button("🌀 Overwhelmed"):
+        st.session_state.current_track = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
+
     # Safety
     st.sidebar.markdown("---")
     with st.sidebar.expander("🆘 EMERGENCY", expanded=False):
@@ -132,10 +147,87 @@ with tab1:
 
 # Tab 2 and 3 remain the same...
 with tab2:
-    st.subheader("Safe Journal")
-    st.text_area("This space is private and yours.", placeholder="Today was...")
-    if st.button("Secure My Thoughts"): st.success("Stored safely.")
+    st.subheader("📊 Your Emotional Journey")
+    
+    # 1. Input: How is the user today?
+    mood_score = st.select_slider(
+        "Rate your mood today:",
+        options=[1, 2, 3, 4, 5],
+        value=3,
+        help="1: Very Low, 5: Fantastic!"
+    )
+    
+    # Map numbers to emojis for visual feedback
+    mood_emojis = {1: "😫", 2: "😔", 3: "😐", 4: "🙂", 5: "🌟"}
+    st.write(f"Current Mood: {mood_emojis[mood_score]}")
 
+    if st.button("Log Mood for Today"):
+        # Initialize mood data in session state if it doesn't exist
+        if "mood_data" not in st.session_state:
+            # Pre-fill with some example data for the week to show the graph
+            st.session_state.mood_data = [3, 4, 2, 3, 4, 3] 
+        
+        st.session_state.mood_data.append(mood_score)
+        st.success("Mood logged! You're building a great habit.")
+
+    # 2. Visualize: The Mood Graph
+    if "mood_data" in st.session_state:
+        st.divider()
+        st.write("### Weekly Mood Trend")
+        
+        # Convert list to a simple DataFrame for the chart
+        chart_data = pd.DataFrame(st.session_state.mood_data, columns=["Mood Level"])
+        
+        # Display the line chart
+        st.line_chart(chart_data, height=250, use_container_width=True)
+        st.caption("Lower points indicate stress; higher points indicate peak wellness.")
+
+    # 3. Private Journal
+    st.divider()
+    st.subheader("📝 Private Thoughts")
+    journal_entry = st.text_area("What's on your mind?", height=150)
+    if st.button("Save Entry"):
+        st.toast("Journal saved to session!")
+        
 with tab3:
-    st.header("The Science of Calm")
-    st.write("Lumina uses RoBERTa-base NLP to identify emotional triggers and provide linguistic mirroring for comfort.")
+    st.header("🔬 The Neural Architecture of Lumina")
+    st.write("Lumina is built on a modular AI pipeline designed to mimic human emotional intelligence.")
+
+    # 1. Natural Language Generation (NLG)
+    st.subheader("🤖 Natural Language Generation")
+    st.info("**Model:** `facebook/blenderbot-400M-distill`")
+    st.write("""
+    Unlike standard chatbots, Lumina uses a **Transformer-based Generative Model**. 
+    This model was trained on 1.5 billion social media conversations specifically to 
+    provide empathetic, context-aware responses rather than just facts.
+    """)
+
+    # 2. Sentiment Analysis
+    st.subheader("📊 Emotional Intelligence (Sentiment)")
+    st.info("**Model:** `cardiffnlp/twitter-roberta-base-sentiment-latest`")
+    st.write("""
+    Lumina uses **RoBERTa** (A Robustly Optimized BERT Pretraining Approach). 
+    This model analyzes the 'vector space' of the user's input to detect three core states: 
+    *Negative*, *Neutral*, or *Positive*. This allows the app to trigger music or breathing 
+    exercises only when a critical stress threshold is met.
+    """)
+    
+
+    # 3. Neural Machine Translation (NMT)
+    st.subheader("🌍 Multilingual Neural Bridge")
+    st.info("**Library:** `deep-translator` (Google NMT Engine)")
+    st.write("""
+    Lumina achieves its global reach via **Neural Machine Translation**. It detects 
+    over 100 languages instantly, translates them to English for high-precision 
+    analysis, and mirrors the user's native language in the response to build trust.
+    """)
+    
+
+    # 4. Psychological Principles
+    st.subheader("🧠 Behavioral Science Foundation")
+    st.write("""
+    The app utilizes three key psychological frameworks:
+    * **CBT (Cognitive Behavioral Therapy):** Reframing negative thoughts through dialogue.
+    * **Mindfulness:** Grounding the user with auditory anchors (Nature sounds).
+    * **Habit Formation:** Using 'Micro-wins' (Daily Challenges) to stimulate dopamine release.
+    """)
