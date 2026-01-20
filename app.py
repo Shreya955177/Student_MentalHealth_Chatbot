@@ -105,10 +105,10 @@ lottie_zen = load_lottieurl(lottie_url)
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     if lottie_zen: st_lottie(lottie_zen, height=200)
-    st.markdown('<div class="glass-card"><h1>Lumina</h1><p>Truly human, truly multilingual.</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass-card"><h1>FeelBot</h1><p>A supportive chatbot friend that listens, understands your mood, and helps you handle stress and emotions...</p></div>', unsafe_allow_html=True)
 
  # --- THE USER GUIDE (Placed right after the header) ---
-with st.expander("💡 How to get the most out of Lumina", expanded=False):
+with st.expander("💡 How to use the FeelBot: Here are the instructions to use the FeelBot AI ChatBot", expanded=False):
     st.markdown(GUIDE_TEXT)
 
 tab1, tab2, tab3 = st.tabs(["💬 Chat Support", "📝 Reflection", "🔬 Science"])
