@@ -7,11 +7,11 @@ import requests
 import datetime
 
 # --- 1. PAGE CONFIG ---
-st.set_page_config(page_title="Lumina | AI Sanctuary", page_icon="🌱", layout="wide")
+st.set_page_config(page_title="FeelBot | AI ChatBot For Students", page_icon="💭", layout="wide")
 
 # --- 2. GLOBAL CONTENT & STATE ---
 GUIDE_TEXT = """
-Welcome to your safe space. Lumina is designed to be a **reflective listener**.
+Welcome to your safe space. FeelBot is designed to be a **reflective listener**.
 To have the best experience:
 
 * **Speak your heart:** Use your native language. Lumina understands over 100 languages.
@@ -19,7 +19,7 @@ To have the best experience:
 * **ask for help:** You can ask, "Can you help me reframe this thought?" or "I just need to vent."
 * **Take your time:** There is no rush. This space is yours.
 
-*Note: Lumina is an AI companion for wellness, not a clinical replacement.*
+*Note: FeelBot is an AI companion for wellness, not a clinical replacement.*
 """
 
 if "messages" not in st.session_state:
@@ -39,7 +39,7 @@ def load_ai_models():
     chat_task = pipeline("text2text-generation", model="facebook/blenderbot-400M-distill")
     return sentiment_task, chat_task
 
-with st.spinner("Lumina is waking up... Please wait a moment."):
+with st.spinner("FeelBot Assistant is waking up... Please wait a moment."):
     classifier, chat_brain = load_ai_models()
 
 def load_lottieurl(url):
@@ -50,7 +50,7 @@ def load_lottieurl(url):
 
 # --- 3. SIDEBAR ---
 with st.sidebar:
-    st.title("🌿 Lumina Sanctuary")
+    st.title("🌿 FeelBot is an AI chatbot for the students, who requires a support for the mental health issues.")
     theme_choice = st.radio("Atmosphere", ["Daylight (Fresh)", "Midnight (Calm)"])
     
     # Daily Wellness Challenge
@@ -122,7 +122,7 @@ with tab1:
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"): st.write(prompt)
 
-        with st.spinner("✨ Thinking..."):
+        with st.spinner("✨ FeelBot Assistant Thinking..."):
             try:
                 # A. Translation to English
                 translator = GoogleTranslator(source='auto', target='en')
@@ -203,13 +203,13 @@ with tab2:
         
 with tab3:
     st.header("🔬 The Neural Architecture of Lumina")
-    st.write("Lumina is built on a modular AI pipeline designed to mimic human emotional intelligence.")
+    st.write("FeelBot is built on a modular AI pipeline designed to mimic human emotional intelligence.")
 
     # 1. Natural Language Generation (NLG)
     st.subheader("🤖 Natural Language Generation")
     st.info("**Model:** `facebook/blenderbot-400M-distill`")
     st.write("""
-    Unlike standard chatbots, Lumina uses a **Transformer-based Generative Model**. 
+    Unlike standard chatbots, FeelBot uses a **Transformer-based Generative Model**. 
     This model was trained on 1.5 billion social media conversations specifically to 
     provide empathetic, context-aware responses rather than just facts.
     """)
@@ -218,7 +218,7 @@ with tab3:
     st.subheader("📊 Emotional Intelligence (Sentiment)")
     st.info("**Model:** `cardiffnlp/twitter-roberta-base-sentiment-latest`")
     st.write("""
-    Lumina uses **RoBERTa** (A Robustly Optimized BERT Pretraining Approach). 
+    FeelBot uses **RoBERTa** (A Robustly Optimized BERT Pretraining Approach). 
     This model analyzes the 'vector space' of the user's input to detect three core states: 
     *Negative*, *Neutral*, or *Positive*. This allows the app to trigger music or breathing 
     exercises only when a critical stress threshold is met.
@@ -229,7 +229,7 @@ with tab3:
     st.subheader("🌍 Multilingual Neural Bridge")
     st.info("**Library:** `deep-translator` (Google NMT Engine)")
     st.write("""
-    Lumina achieves its global reach via **Neural Machine Translation**. It detects 
+    FeelBot achieves its global reach via **Neural Machine Translation**. It detects 
     over 100 languages instantly, translates them to English for high-precision 
     analysis, and mirrors the user's native language in the response to build trust.
     """)
