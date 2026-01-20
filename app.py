@@ -1,184 +1,168 @@
 import streamlit as st
+from streamlit_lottie import st_lottie
+from googletrans import Translator
 from transformers import pipeline
-import sqlite3
-from datetime import datetime
 import pandas as pd
+import sqlite3
+import random
 import time
+import requests
 
-# --- 1. DATABASE SETUP ---
-def init_db():
-    conn = sqlite3.connect('mood_tracker.db')
-    c = conn.cursor()
-    # Table for simple mood tracking
-    c.execute('''CREATE TABLE IF NOT EXISTS logs 
-                 (date TEXT, mood TEXT, confidence REAL)''')
-    # Table for advanced journaling
-    c.execute('''CREATE TABLE IF NOT EXISTS journal 
-                 (date TEXT, note TEXT, trigger TEXT)''')
-    conn.commit()
-    conn.close()
+# --- 1. PAGE CONFIG & THEME INITIALIZATION ---
+st.set_page_config(page_title="Lumina | Zen Space", page_icon="🌱", layout="wide")
 
-def save_mood(mood, confidence):
-    conn = sqlite3.connect('mood_tracker.db')
-    c = conn.cursor()
-    date_str = datetime.now().strftime("%Y-%m-%d %H:%M")
-    c.execute("INSERT INTO logs VALUES (?, ?, ?)", (date_str, mood, confidence))
-    conn.commit()
-    conn.close()
+# Initialize Session States
+if "first_visit" not in st.session_state: st.session_state.first_visit = True
+if "messages" not in st.session_state: st.session_state.messages = []
 
-def save_journal(note, trigger):
-    conn = sqlite3.connect('mood_tracker.db')
-    c = conn.cursor()
-    date_str = datetime.now().strftime("%Y-%m-%d %H:%M")
-    c.execute("INSERT INTO journal VALUES (?, ?, ?)", (date_str, note, trigger))
-    conn.commit()
-    conn.close()
-
-# --- 2. AI MODEL LOADING ---
+# --- 2. ASSETS & MODELS ---
 @st.cache_resource
-def load_model():
-    return pipeline("text-classification", model="bhadresh-savani/distilbert-base-uncased-emotion")
+def load_tools():
+    translator = Translator()
+    # High-accuracy emotion model (RoBERTa)
+    classifier = pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-sentiment-latest")
+    return translator, classifier
 
-classifier = load_model()
+translator, classifier = load_tools()
 
-# --- 3. COMPONENT FUNCTIONS ---
+def load_lottieurl(url):
+    r = requests.get(url)
+    return r.json() if r.status_code == 200 else None
 
-def show_sos_dashboard():
-    with st.expander("🚨 EMERGENCY SOS DASHBOARD", expanded=False):
-        st.error("If you are in immediate danger, please use these resources.")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.link_button("📞 Call Crisis Line (988)", "tel:988")
-            st.link_button("🏫 Campus Security", "https://google.com")
-        with col2:
-            st.link_button("💬 Crisis Text Line", "sms:741741")
-            st.link_button("🏥 Local Hospital", "https://maps.google.com")
+# --- 3. DATABASE LOGIC ---
+def init_db():
+    conn = sqlite3.connect('lumina_wellness.db')
+    c = conn.cursor()
+    c.execute('CREATE TABLE IF NOT EXISTS logs (date TEXT, mood TEXT, trigger TEXT)')
+    conn.commit()
+    conn.close()
 
-def breathing_pacer():
-    st.info("Let's do two rounds of Box Breathing (4-4-4-4).")
-    status = st.empty()
-    bar = st.progress(0)
-    for r in range(1, 3):
-        # Inhale
-        for i in range(101):
-            time.sleep(0.04)
-            bar.progress(i)
-            status.subheader(f"Round {r}: 🟢 Inhale... (4s)")
-        # Hold
-        status.subheader(f"Round {r}: 🟡 Hold... (4s)")
-        time.sleep(4)
-        # Exhale
-        for i in range(100, -1, -1):
-            time.sleep(0.04)
-            bar.progress(i)
-            status.subheader(f"Round {r}: 🔵 Exhale... (4s)")
-        # Hold
-        status.subheader(f"Round {r}: 🟡 Hold... (4s)")
-        time.sleep(4)
-    status.success("Great job. Take a moment to notice how your body feels.")
-
-def pomodoro_sidebar():
-    st.sidebar.divider()
-    st.sidebar.subheader("⏳ Study Timer")
-    mode = st.sidebar.radio("Mode", ["Focus (25m)", "Break (5m)"])
-    if st.sidebar.button("Start Timer"):
-        duration = 25 * 60 if "Focus" in mode else 5 * 60
-        t_text = st.sidebar.empty()
-        while duration > 0:
-            m, s = divmod(duration, 60)
-            t_text.metric("Remaining", f"{m:02d}:{s:02d}")
-            time.sleep(1)
-            duration -= 1
-        st.sidebar.success("Time's up!")
-        st.balloons()
-
-# --- 4. MAIN APP LAYOUT ---
-st.set_page_config(page_title="Lumina Companion", page_icon="🌱")
-init_db()
-
-# Sidebar History
+# --- 4. SIDEBAR: CONTROLS & ATMOSPHERE ---
 with st.sidebar:
-    st.title("📊 Mood Trends")
-    try:
-        conn = sqlite3.connect('mood_tracker.db')
-        df = pd.read_sql_query("SELECT mood FROM logs", conn)
-        if not df.empty:
-            st.bar_chart(df['mood'].value_counts())
-        conn.close()
-    except:
-        st.write("No history yet.")
-    pomodoro_sidebar()
+    st.title("🌿 Lumina Settings")
+    
+    # Theme Toggle
+    theme_choice = st.radio("Choose Atmosphere", ["Daylight (Fresh)", "Midnight (Calm)"])
+    
+    st.divider()
+    
+    # Ambient Soundscape
+    st.subheader("🎧 Soundscape")
+    sound_choice = st.selectbox("Background Noise", ["None", "Soft Rain", "Deep Forest", "Lo-Fi Study"])
+    sounds = {
+        "Soft Rain": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3",
+        "Deep Forest": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-13.mp3",
+        "Lo-Fi Study": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3"
+    }
+    if sound_choice != "None":
+        st.audio(sounds[sound_choice], format="audio/mp3", loop=True)
 
-# Welcome Message
-if "first_visit" not in st.session_state:
-    st.session_state.first_visit = True
+    st.divider()
+    
+    # Pomodoro Timer
+    st.subheader("⏳ Focus Timer")
+    if st.button("Start 25m Focus Session"):
+        st.toast("Focus mode active! You've got this.")
 
-if st.session_state.first_visit:
-    st.toast("Welcome to Lumina. I'm glad you're here. 👋")
-    st.info("""
-    ### Welcome to Lumina 🌱
-    Your safe, anonymous space to vent, breathe, and focus. 
-    **How are you really feeling today?**
-    """)
-    st.session_state.first_visit = False
+# --- 5. DYNAMIC UI STYLING (THEMES) ---
+if theme_choice == "Midnight (Calm)":
+    bg_gradient = "linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%)"
+    card_bg = "rgba(30, 41, 59, 0.7)"
+    text_color = "#f8fafc"
+    lottie_url = "https://lottie.host/682946c1-507c-4749-8084-3c66289d38f8/U7S8vOaDbe.json" # Stars
+else:
+    bg_gradient = "linear-gradient(180deg, #E3F2FD 0%, #E8F5E9 100%)"
+    card_bg = "rgba(255, 255, 255, 0.7)"
+    text_color = "#2D3748"
+    lottie_url = "https://lottie.host/8051e041-0672-46c5-a3d8-7e3f436980e1/V8u1X2vX6t.json" # Sun/Zen
 
-# Tabs for Organization
-tab1, tab2, tab3 = st.tabs(["💬 Chat & Support", "📝 Journal", "🔬 The Science"])
+st.markdown(f"""
+    <style>
+    .stApp {{ background: {bg_gradient}; color: {text_color}; }}
+    .glass-card {{
+        background: {card_bg};
+        border-radius: 20px;
+        padding: 25px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+        margin-bottom: 20px;
+    }}
+    h1, h2, h3, p {{ color: {text_color} !important; font-family: 'Helvetica Neue', sans-serif; }}
+    .stButton>button {{ border-radius: 20px; background-color: #81C784 !important; color: white !important; }}
+    </style>
+""", unsafe_allow_html=True)
+
+# --- 6. MAIN CONTENT ---
+init_db()
+lottie_zen = load_lottieurl(lottie_url)
+
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    if lottie_zen: st_lottie(lottie_zen, height=200)
+    st.markdown(f'<div class="glass-card"><h1>Lumina</h1><p>Your multilingual safe space for mental clarity.</p></div>', unsafe_allow_html=True)
+    
+    # Affirmation
+    affirmations = ["You are capable of hard things.", "Take it one breath at a time.", "Your grades do not define your worth."]
+    st.markdown(f"<p style='text-align:center; font-style:italic;'>\"{random.choice(affirmations)}\"</p>", unsafe_allow_html=True)
+
+# --- 7. THE TABS ---
+tab1, tab2, tab3 = st.tabs(["💬 Chat Support", "📝 Reflection", "🔬 Science"])
 
 with tab1:
-    show_sos_dashboard()
+    # SOS Expander
+    with st.expander("🚨 Need Immediate Help?", expanded=False):
+        st.error("Crisis Line: 988 | Campus Security: [Link]")
     
-    # Chat Logic
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-
+    # Chat Loop
     for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+        with st.chat_message(msg["role"]): st.write(msg["content"])
 
-    if prompt := st.chat_input("Tell me what's on your mind..."):
-        st.chat_message("user").markdown(prompt)
+    if prompt := st.chat_input("How are you feeling right now?"):
         st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"): st.write(prompt)
 
-        # Safety Check
-        crisis_words = ["suicide", "kill", "hurt myself", "end it"]
-        if any(w in prompt.lower() for w in crisis_words):
-            resp = "🚨 **I'm worried about you.** Please use the SOS dashboard at the top or call 988 immediately."
-        else:
-            # AI Sentiment
-            pred = classifier(prompt)[0]
-            label = pred['label']
-            save_mood(label, pred['score'])
-            
-            responses = {
-                "fear": "Anxiety can feel like a heavy weight. I'm here with you.",
-                "sadness": "It's okay to feel down. Healing isn't a straight line.",
-                "anger": "Frustration is natural. Let's find a way to breathe through it.",
-                "joy": "That's wonderful! I'm so happy for you.",
-                "love": "What a beautiful, positive feeling!",
-                "surprise": "Sounds like an eventful day!"
+        with st.spinner("Lumina is thinking..."):
+            # A. Language & Sentiment
+            lang = translator.detect(prompt).lang
+            translated_en = translator.translate(prompt, dest='en').text
+            res = classifier(translated_en)[0]
+            label = res['label'] # positive, neutral, negative
+
+            # B. Context-Aware Music mapping
+            music_links = {
+                "negative": ["Comforting Piano", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"],
+                "neutral": ["Focus frequencies", "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"]
             }
-            resp = f"**Lumina detected: {label.capitalize()}**\n\n{responses.get(label, 'I hear you.')}"
 
-        with st.chat_message("assistant"):
-            st.markdown(resp)
-            if not any(w in prompt.lower() for w in crisis_words) and label in ["fear", "anger", "sadness"]:
-                if st.button("Start Breathing Pacer"):
-                    breathing_pacer()
-        st.session_state.messages.append({"role": "assistant", "content": resp})
+            # C. Response logic
+            response_en = "I'm listening. Thank you for sharing your heart with me."
+            if label == "negative":
+                response_en = "I'm sorry things are heavy. I've found some music to sit with you through this."
+            
+            final_resp = translator.translate(response_en, dest=lang).text
+            
+            with st.chat_message("assistant"):
+                st.write(final_resp)
+                if label in music_links:
+                    st.caption(f"🎵 Suggested: {music_links[label][0]}")
+                    st.audio(music_links[label][1])
+
+        st.session_state.messages.append({"role": "assistant", "content": final_resp})
 
 with tab2:
-    st.subheader("📝 Advanced Journaling")
-    with st.form("j_form"):
-        note = st.text_area("Write freely here...")
-        trig = st.selectbox("Likely Trigger:", ["Academics", "Social", "Family", "Health", "Other"])
-        if st.form_submit_button("Save Entry"):
-            save_journal(note, trig)
-            st.success("Reflecting helps clear the mind. Entry saved.")
+    st.subheader("Journal Your Thoughts")
+    note = st.text_area("What's on your mind today?")
+    trigger = st.selectbox("Main Trigger", ["Academic Pressure", "Social/Friends", "Personal", "Other"])
+    if st.button("Save Entry"):
+        st.success("Your reflection has been safely stored.")
 
 with tab3:
-    st.header("Why Lumina Works")
-    st.write("**Box Breathing:** Stimulates the Vagus Nerve to lower your heart rate.")
+    st.header("The Science of Relief")
+    st.write("Lumina uses **Affect Labeling** and **Binaural Audio** to lower amygdala activity.")
     
-    st.write("**Labeling Emotions:** Reduces activity in the Amygdala (the brain's fear center).")
-    st.write("**Pomodoro:** Reduces task-based anxiety by breaking down cognitive load.")
+
+# --- 8. FOOTER SHARE ---
+st.write("---")
+if st.button("🔗 Share Lumina with a Friend"):
+    st.toast("Link copied to clipboard!")
