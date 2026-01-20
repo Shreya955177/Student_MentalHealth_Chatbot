@@ -9,12 +9,16 @@ import time
 def init_db():
     conn = sqlite3.connect('mood_tracker.db')
     c = conn.cursor()
+    # Table for simple mood tracking
     c.execute('''CREATE TABLE IF NOT EXISTS logs 
                  (date TEXT, mood TEXT, confidence REAL)''')
+    # Table for advanced journaling
+    c.execute('''CREATE TABLE IF NOT EXISTS journal 
+                 (date TEXT, note TEXT, trigger TEXT)''')
     conn.commit()
     conn.close()
 
-def save_entry(mood, confidence):
+def save_mood(mood, confidence):
     conn = sqlite3.connect('mood_tracker.db')
     c = conn.cursor()
     date_str = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -22,119 +26,159 @@ def save_entry(mood, confidence):
     conn.commit()
     conn.close()
 
+def save_journal(note, trigger):
+    conn = sqlite3.connect('mood_tracker.db')
+    c = conn.cursor()
+    date_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+    c.execute("INSERT INTO journal VALUES (?, ?, ?)", (date_str, note, trigger))
+    conn.commit()
+    conn.close()
+
 # --- 2. AI MODEL LOADING ---
 @st.cache_resource
 def load_model():
-    # This model detects: joy, sadness, anger, fear, love, surprise
     return pipeline("text-classification", model="bhadresh-savani/distilbert-base-uncased-emotion")
 
 classifier = load_model()
 
-# --- 3. INTERACTIVE BREATHING TOOL ---
-def breathing_exercise():
-    st.write("---")
-    st.write("### 🫁 Guided Box Breathing")
-    st.info("Follow the bar: Inhale -> Hold -> Exhale -> Hold")
-    
+# --- 3. COMPONENT FUNCTIONS ---
+
+def show_sos_dashboard():
+    with st.expander("🚨 EMERGENCY SOS DASHBOARD", expanded=False):
+        st.error("If you are in immediate danger, please use these resources.")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.link_button("📞 Call Crisis Line (988)", "tel:988")
+            st.link_button("🏫 Campus Security", "https://google.com")
+        with col2:
+            st.link_button("💬 Crisis Text Line", "sms:741741")
+            st.link_button("🏥 Local Hospital", "https://maps.google.com")
+
+def breathing_pacer():
+    st.info("Let's do two rounds of Box Breathing (4-4-4-4).")
     status = st.empty()
-    progress_bar = st.progress(0)
-    
-    for _ in range(2):  # 2 Cycles
+    bar = st.progress(0)
+    for r in range(1, 3):
         # Inhale
         for i in range(101):
             time.sleep(0.04)
-            progress_bar.progress(i)
-            status.subheader("🟢 Inhale... (4s)")
-        time.sleep(1) # Brief pause
-        
+            bar.progress(i)
+            status.subheader(f"Round {r}: 🟢 Inhale... (4s)")
         # Hold
-        status.subheader("🟡 Hold... (4s)")
+        status.subheader(f"Round {r}: 🟡 Hold... (4s)")
         time.sleep(4)
-        
         # Exhale
         for i in range(100, -1, -1):
             time.sleep(0.04)
-            progress_bar.progress(i)
-            status.subheader("🔵 Exhale... (4s)")
-            
+            bar.progress(i)
+            status.subheader(f"Round {r}: 🔵 Exhale... (4s)")
         # Hold
-        status.subheader("🟡 Hold... (4s)")
+        status.subheader(f"Round {r}: 🟡 Hold... (4s)")
         time.sleep(4)
-    status.success("✅ Feeling a bit calmer? You're doing great.")
+    status.success("Great job. Take a moment to notice how your body feels.")
 
-# --- 4. APP INTERFACE ---
+def pomodoro_sidebar():
+    st.sidebar.divider()
+    st.sidebar.subheader("⏳ Study Timer")
+    mode = st.sidebar.radio("Mode", ["Focus (25m)", "Break (5m)"])
+    if st.sidebar.button("Start Timer"):
+        duration = 25 * 60 if "Focus" in mode else 5 * 60
+        t_text = st.sidebar.empty()
+        while duration > 0:
+            m, s = divmod(duration, 60)
+            t_text.metric("Remaining", f"{m:02d}:{s:02d}")
+            time.sleep(1)
+            duration -= 1
+        st.sidebar.success("Time's up!")
+        st.balloons()
+
+# --- 4. MAIN APP LAYOUT ---
 st.set_page_config(page_title="Lumina Companion", page_icon="🌱")
 init_db()
 
-# Sidebar for History & Safety
+# Sidebar History
 with st.sidebar:
-    st.title("📊 Mood History")
+    st.title("📊 Mood Trends")
     try:
         conn = sqlite3.connect('mood_tracker.db')
-        df = pd.read_sql_query("SELECT * FROM logs ORDER BY date DESC LIMIT 10", conn)
+        df = pd.read_sql_query("SELECT mood FROM logs", conn)
         if not df.empty:
             st.bar_chart(df['mood'].value_counts())
-        else:
-            st.write("Start chatting to see your mood history!")
         conn.close()
     except:
-        st.write("History will appear here.")
+        st.write("No history yet.")
+    pomodoro_sidebar()
+
+# Welcome Message
+if "first_visit" not in st.session_state:
+    st.session_state.first_visit = True
+
+if st.session_state.first_visit:
+    st.toast("Welcome to Lumina. I'm glad you're here. 👋")
+    st.info("""
+    ### Welcome to Lumina 🌱
+    Your safe, anonymous space to vent, breathe, and focus. 
+    **How are you really feeling today?**
+    """)
+    st.session_state.first_visit = False
+
+# Tabs for Organization
+tab1, tab2, tab3 = st.tabs(["💬 Chat & Support", "📝 Journal", "🔬 The Science"])
+
+with tab1:
+    show_sos_dashboard()
     
-    st.divider()
-    st.title("🆘 Crisis Help")
-    st.error("Emergency: Call 911 / 988")
-    st.info("Text HOME to 741741")
+    # Chat Logic
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
-st.title("🌱 Lumina")
-st.markdown("*A safe space for students to vent, breathe, and track well-being.*")
+    for msg in st.session_state.messages:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
-# Initialize Chat History
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+    if prompt := st.chat_input("Tell me what's on your mind..."):
+        st.chat_message("user").markdown(prompt)
+        st.session_state.messages.append({"role": "user", "content": prompt})
 
-# Display Messages
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+        # Safety Check
+        crisis_words = ["suicide", "kill", "hurt myself", "end it"]
+        if any(w in prompt.lower() for w in crisis_words):
+            resp = "🚨 **I'm worried about you.** Please use the SOS dashboard at the top or call 988 immediately."
+        else:
+            # AI Sentiment
+            pred = classifier(prompt)[0]
+            label = pred['label']
+            save_mood(label, pred['score'])
+            
+            responses = {
+                "fear": "Anxiety can feel like a heavy weight. I'm here with you.",
+                "sadness": "It's okay to feel down. Healing isn't a straight line.",
+                "anger": "Frustration is natural. Let's find a way to breathe through it.",
+                "joy": "That's wonderful! I'm so happy for you.",
+                "love": "What a beautiful, positive feeling!",
+                "surprise": "Sounds like an eventful day!"
+            }
+            resp = f"**Lumina detected: {label.capitalize()}**\n\n{responses.get(label, 'I hear you.')}"
 
-# User Input
-if prompt := st.chat_input("How are you feeling today?"):
-    # Show User Message
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+        with st.chat_message("assistant"):
+            st.markdown(resp)
+            if not any(w in prompt.lower() for w in crisis_words) and label in ["fear", "anger", "sadness"]:
+                if st.button("Start Breathing Pacer"):
+                    breathing_pacer()
+        st.session_state.messages.append({"role": "assistant", "content": resp})
 
-    # A. Safety Check
-    crisis_keywords = ["kill", "suicide", "hurt myself", "end it all"]
-    if any(word in prompt.lower() for word in crisis_keywords):
-        response = "🚨 **I'm very concerned about you.** Please reach out for help. You are not alone. Call 988 or text 741741 immediately."
-    else:
-        # B. AI Sentiment Analysis
-        results = classifier(prompt)
-        label = results[0]['label']
-        score = results[0]['score']
-        
-        # Save to DB
-        save_entry(label, score)
+with tab2:
+    st.subheader("📝 Advanced Journaling")
+    with st.form("j_form"):
+        note = st.text_area("Write freely here...")
+        trig = st.selectbox("Likely Trigger:", ["Academics", "Social", "Family", "Health", "Other"])
+        if st.form_submit_button("Save Entry"):
+            save_journal(note, trig)
+            st.success("Reflecting helps clear the mind. Entry saved.")
 
-        # C. Response Mapping
-        responses = {
-            "fear": "It sounds like anxiety is weighing on you. Let's try to ground ourselves.",
-            "sadness": "I'm sorry you're feeling down. Remember that it's okay to not be okay today.",
-            "anger": "It's completely valid to feel frustrated. Let's find a way to release that tension.",
-            "joy": "I love hearing that! What's the best part of your day so far?",
-            "surprise": "That sounds like a lot to process at once!",
-            "love": "That’s such a beautiful and positive feeling."
-        }
-        
-        main_resp = responses.get(label, "Thank you for sharing that with me. I'm listening.")
-        response = f"**Lumina detected: {label.capitalize()}**\n\n{main_resp}"
-
-    # Show Assistant Message
-    with st.chat_message("assistant"):
-        st.markdown(response)
-        if not any(word in prompt.lower() for word in crisis_keywords) and label in ["fear", "anger", "sadness"]:
-            if st.button("Start 2-Min Breathing Exercise"):
-                breathing_exercise()
+with tab3:
+    st.header("Why Lumina Works")
+    st.write("**Box Breathing:** Stimulates the Vagus Nerve to lower your heart rate.")
     
-    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.write("**Labeling Emotions:** Reduces activity in the Amygdala (the brain's fear center).")
+    st.write("**Pomodoro:** Reduces task-based anxiety by breaking down cognitive load.")
