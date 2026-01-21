@@ -14,6 +14,15 @@
 * **🎧 Emotion-Based Playlists:** Integrated audio sanctuary with local MP3 support for focus, joy, and relaxation.
 * **📈 Mood Tracker:** A visual dashboard to log and monitor emotional trends over time.
 
+  
+## 💡 How to Use FeelBot
+
+1.  **Select Atmosphere:** Use the sidebar to switch between "Daylight" and "Midnight" themes.
+2.  **Daily Wellness Win:** Click the "I did it!" button after completing your daily micro-goal.
+3.  **Chat Support:** Type in your native language; FeelBot will translate and respond empathetically.
+4.  **Audio Sanctuary:** Select a mood-based playlist from the sidebar to start the background music.
+5.  **Science Tab:** Explore the AI models and psychological frameworks used in this project.
+
 ---
 
 ## 🔬 The Technology Stack
