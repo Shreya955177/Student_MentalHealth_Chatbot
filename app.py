@@ -94,11 +94,66 @@ with st.sidebar:
 if theme_choice == "Midnight (Calm)":
     bg, card, text = "linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%)", "rgba(30, 41, 59, 0.7)", "#f8fafc"
     lottie_url = "https://lottie.host/682946c1-507c-4749-8084-3c66289d38f8/U7S8vOaDbe.json" 
+    # Standard Midnight CSS
+    st.markdown(f"""
+        <style>
+        .stApp {{ background: {bg}; color: {text}; }}
+        .glass-card {{ background: {card}; border-radius: 20px; padding: 25px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); text-align: center; margin-bottom: 20px; }}
+        h1, h2, h3, p, span, label {{ color: {text} !important; }}
+        </style>
+    """, unsafe_allow_html=True)
 else:
-    bg, card, text = "linear-gradient(180deg, #E3F2FD 0%, #E8F5E9 100%)", "rgba(255, 255, 255, 0.7)", "#2D3748"
+    # --- FIXED DAYLIGHT MODE CSS ---
+    bg, card, text = "linear-gradient(180deg, #E3F2FD 0%, #E8F5E9 100%)", "rgba(255, 255, 255, 0.8)", "#1A202C"
     lottie_url = "https://lottie.host/8051e041-0672-46c5-a3d8-7e3f436980e1/V8u1X2vX6t.json"
+    
+    st.markdown(f"""
+        <style>
+        /* Main Background */
+        .stApp {{ 
+            background: {bg}; 
+            color: {text}; 
+        }}
+        
+        /* High Contrast Sidebar */
+        [data-testid="stSidebar"] {{
+            background-color: #FFFFFF !important;
+        }}
+        
+        /* Force Sidebar text to be Dark Charcoal */
+        [data-testid="stSidebar"] h1, 
+        [data-testid="stSidebar"] h2, 
+        [data-testid="stSidebar"] h3, 
+        [data-testid="stSidebar"] p,
+        [data-testid="stSidebar"] label,
+        [data-testid="stSidebar"] .stMarkdown {{
+            color: #1A202C !important;
+        }}
 
-st.markdown(f"<style>.stApp {{ background: {bg}; color: {text}; }} .glass-card {{ background: {card}; border-radius: 20px; padding: 25px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); text-align: center; margin-bottom: 20px; }} h1, h2, h3, p {{ color: {text} !important; }}</style>", unsafe_allow_html=True)
+        /* Fix Radio Button Text specifically */
+        div[data-testid="stWidgetLabel"] p {{
+            color: #1A202C !important;
+            font-weight: 600 !important;
+        }}
+        
+        .st-af {{ color: #1A202C !important; }} /* Radio text color */
+
+        /* Glass card contrast */
+        .glass-card {{ 
+            background: {card}; 
+            border-radius: 20px; 
+            padding: 25px; 
+            backdrop-filter: blur(10px); 
+            border: 1px solid rgba(0,0,0,0.1); 
+            text-align: center; 
+            margin-bottom: 20px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }}
+        
+        /* Main Heading Contrast */
+        h1, h2, h3, p {{ color: {text} !important; }}
+        </style>
+    """, unsafe_allow_html=True)
 
 # --- 5. MAIN UI ---
 lottie_zen = load_lottieurl(lottie_url)
@@ -141,7 +196,15 @@ with tab1:
                 final_resp = GoogleTranslator(source='en', target=user_lang).translate(response_en)
                 
                 with st.chat_message("assistant"):
-                    st.write(final_resp)
+                    # Add custom bubble styling for the assistant response
+                    if theme_choice == "Daylight (Fresh)":
+                        st.markdown(f"""
+                            <div style="background-color: #FFFFFF; color: #1A202C; padding: 15px; border-radius: 15px; border: 1px solid #E2E8F0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                                {final_resp}
+                            </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.write(final_resp)
                     
                     # Support tools appear only if negative sentiment persists
                     if st.session_state.chat_count >= 2 and sentiment['label'] == "negative":
