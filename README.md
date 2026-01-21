@@ -32,8 +32,8 @@ FeelBot is built using a modular AI pipeline:
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/YOUR_USERNAME/FeelBot-Sanctuary.git](https://github.com/YOUR_USERNAME/FeelBot-Sanctuary.git)
-    cd FeelBot-Sanctuary
+    git clone [https://github.com/Shreya955177/Student_MentalHealth_Chatbot.git](https://github.com/Shreya955177/Student_MentalHealth_Chatbot.git)
+    cd Student_MentalHealth_Chatbot
     ```
 
 2.  **Install Dependencies:**
