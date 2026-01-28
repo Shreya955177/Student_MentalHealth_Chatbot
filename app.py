@@ -37,7 +37,7 @@ def load_ai_models():
     # Model 1: Sentiment Analysis (to trigger music/support)
     sentiment_task = pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-sentiment-latest")
     # Model 2: Conversational AI (The brain that talks back)
-    chat_task = pipeline("text-generation" model="facebook/blenderbot-400M-distill")
+    chat_task = pipeline("text-generation", model="facebook/blenderbot-400M-distill")
     return sentiment_task, chat_task
 
 with st.spinner("FeelBot Assistant is waking up... Please wait a moment."):
